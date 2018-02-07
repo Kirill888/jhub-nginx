@@ -3,6 +3,11 @@ import subprocess
 import socket
 
 
+class JhubNginxError(Exception):
+    def __init___(self, opts=None, *args):
+        Exception.__init__(self, *args)
+
+
 def resolve_hostname(domain):
     try:
         return socket.gethostbyname(domain)

@@ -19,6 +19,8 @@ nginx:
 
 letsencrypt:
    webroot: /var/www/letsencrypt
+
+duckdns: {}
 '''
 
 NGINX_VHOST = '''
