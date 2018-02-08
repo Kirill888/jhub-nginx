@@ -82,7 +82,7 @@ def add_or_check_vhost(domain,
         debug('Cleaning up {}'.format(vhost_cfg_file))
 
         try:
-            os.remove(vhost_cfg_file)
+            os.remove(str(vhost_cfg_file))
             nginx_reload()
         except JhubNginxError as e:
             debug('Ooops failure within a failure: {}'.format(str(e)))
