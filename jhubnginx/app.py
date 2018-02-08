@@ -35,9 +35,17 @@ def cli(config):
 @click.option('--hub-ip', type=str, default='127.0.0.1', help="IP JupyterHub is running on")
 @click.option('--hub-port', type=int, default=8000, help="Port JupyterHub is running on")
 @click.option('--skip-dns-check', default=False, is_flag=True, help="Don't check DNS record")
+@click.option('--email', type=str, help="Supply E-mail address for Let's Encrypt")
+@click.option('--token', type=str, help="Supply `duckdns.org` token for updating DNS entry")
 @click.pass_obj
-def add(ctx, domain, hub_ip, hub_port, skip_dns_check):
+def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token):
     opts = ctx['opts']
+
+    if email is not None:
+        opts['letsencrypt']['email'] = email
+
+    if token is not None:
+        opts['duckdns']['token'] = token
 
     try:
         add_or_check_vhost(domain,

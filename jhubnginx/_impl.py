@@ -1,12 +1,13 @@
-from . import utils
-from .utils import JhubNginxError
-from ._templates import NGINX_VHOST
-from .dns import check_dns
-
+import os
 import subprocess
 from pathlib import Path
 from jinja2 import Template
 from pydash import get as _get
+
+from . import utils
+from .utils import JhubNginxError
+from ._templates import NGINX_VHOST
+from .dns import check_dns
 
 
 def warn(msg):
@@ -47,6 +48,10 @@ def add_or_check_vhost(domain,
 
     def run_certbot():
         debug('Running certbot for {}'.format(domain))
+        email = _get(opts, 'letsencrypt.email', None)
+
+        if email is None:
+            raise JhubNginxError("Can't request SSL without an E-mail address")
 
         cmd = ('certbot certonly'
                ' --webroot -w {webroot}'
@@ -73,6 +78,17 @@ def add_or_check_vhost(domain,
 
         return utils.write_if_different(str(vhost_cfg_file), txt)
 
+    def attempt_cleanup():
+        debug('Cleaning up {}'.format(vhost_cfg_file))
+
+        try:
+            os.remove(vhost_cfg_file)
+            nginx_reload()
+        except JhubNginxError as e:
+            debug('Ooops failure within a failure: {}'.format(str(e)))
+        except OSError as e:
+            debug('Ooops failure within a failure: {}'.format(str(e)))
+
     def have_ssl_files():
         ssl_root = Path(_get(opts, 'nginx.ssl_root'))/domain
         privkey = ssl_root/"privkey.pem"
@@ -82,8 +98,12 @@ def add_or_check_vhost(domain,
     def obtain_ssl():
         debug(' writing temp vhost config')
         gen_config(nossl=True)
-        nginx_reload()
-        run_certbot()
+        try:
+            nginx_reload()
+            run_certbot()
+        except JhubNginxError as e:
+            attempt_cleanup()
+            raise e
 
     def add_ssl_vhost():
         updated = gen_config()
