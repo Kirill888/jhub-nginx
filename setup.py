@@ -22,8 +22,11 @@ Automates exposing jupyterhub instances to the web in a safe manner.
         "requests",
         "pydash",
         "pyyaml",
+        "click",
     ],
     entry_points={
-        # "console_scripts": []
+        "console_scripts": [
+            "jhub-vhost = jhubnginx.app:cli"
+        ]
     }
 )

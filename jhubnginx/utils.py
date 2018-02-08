@@ -1,6 +1,7 @@
 import requests
 import subprocess
 import socket
+import yaml
 
 
 class JhubNginxError(Exception):
@@ -64,3 +65,19 @@ def default_opts(opts=None):
         return default_opts
 
     return pydash.defaults_deep({}, opts, default_opts)
+
+
+def opts_from_file(filename, ignore_missing=False):
+    txt = slurp(filename)
+
+    if txt is None:
+        if ignore_missing:
+            return default_opts()
+        else:
+            return None
+
+    try:
+        return default_opts(yaml.load(txt))
+    except yaml.YAMLError as e:
+        print(e)
+        return None

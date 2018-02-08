@@ -1,0 +1,79 @@
+import click
+
+from .utils import JhubNginxError
+from . import utils
+from ._impl import add_or_check_vhost
+
+
+def message(msg):
+    click.echo(msg)
+
+
+def parse_config(ctx, param, value):
+    if ctx.obj is None:
+        ctx.obj = {}
+
+    if value is None:
+        opts = utils.default_opts()
+    else:
+        opts = utils.opts_from_file(value)
+        if opts is None:
+            ctx.abort()
+
+    ctx.obj['opts'] = opts
+
+
+@click.group()
+@click.option('--config', '-c', help='Supply config file',
+              callback=parse_config)
+def cli(config):
+    pass
+
+
+@cli.command('add')
+@click.argument('domain', type=str)
+@click.option('--hub-ip', type=str, default='127.0.0.1', help="IP JupyterHub is running on")
+@click.option('--hub-port', type=int, default=8000, help="Port JupyterHub is running on")
+@click.pass_obj
+def add(ctx, domain, hub_ip, hub_port):
+    opts = ctx['opts']
+
+    try:
+        add_or_check_vhost(domain,
+                           hub_ip=hub_ip,
+                           hub_port=hub_port,
+                           opts=opts)
+    except JhubNginxError as e:
+        print(e)
+        return 1
+
+    return 0
+
+
+@cli.command('dns')
+@click.option('--update/--no-update', default=True, help="Whether to attempt DNS update")
+@click.option('--token', type=str, help="Supply `duckdns.org` token for updating DNS entry")
+@click.argument('domain', type=str)
+@click.pass_obj
+def dns(ctx, domain, update, token=None):
+    from . import dns
+
+    opts = ctx['opts']
+    if token is not None:
+        opts['duckdns']['token'] = token
+
+    try:
+        result = dns.check_dns(domain,
+                               opts=opts,
+                               message=message,
+                               no_update=not update)
+
+        if not result:
+            message("DNS record doesn't match public ip")
+
+        return 0 if result else 1
+    except JhubNginxError as e:
+        message(str(e))
+        return 1
+
+    return 0

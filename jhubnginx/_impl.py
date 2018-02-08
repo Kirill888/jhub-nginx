@@ -72,8 +72,14 @@ def add_or_check_vhost(domain,
 
         return utils.write_if_different(str(vhost_cfg_file), txt)
 
+    def have_ssl_files():
+        ssl_root = Path(_get(opts, 'nginx.ssl_root'))/domain
+        privkey = ssl_root/"privkey.pem"
+        fullchain = ssl_root/"fullchain.pem"
+        return privkey.exists() and fullchain.exists()
+
     def obtain_ssl():
-        debug('Obtaining SSL for {}, writing temp vhost config'.format(domain))
+        debug(' writing temp vhost config')
         gen_config(nossl=True)
         nginx_reload()
         run_certbot()
@@ -95,7 +101,12 @@ def add_or_check_vhost(domain,
         add_ssl_vhost()  # Make sure content is up to date
     else:
         check_dns(domain, public_ip, opts, message=debug)
-        obtain_ssl()
+        if have_ssl_files():
+            debug('Found SSL files, no need to run certbot')
+        else:
+            debug('Obtaining SSL for {}'.format(domain))
+            obtain_ssl()
+
         add_ssl_vhost()
 
     return True
