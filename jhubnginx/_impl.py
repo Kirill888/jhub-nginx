@@ -28,11 +28,12 @@ def domain_config_path(domain, opts):
 def add_or_check_vhost(domain,
                        hub_ip='127.0.0.1',
                        hub_port='8000',
+                       skip_dns_check=False,
                        opts=None):
 
     opts = utils.default_opts(opts)
     vhost_cfg_file = domain_config_path(domain, opts)
-    public_ip = utils.public_ip()
+    public_ip = None if skip_dns_check else utils.public_ip()
 
     def nginx_reload():
         debug('Reloading nginx config')
@@ -93,14 +94,18 @@ def add_or_check_vhost(domain,
             debug('No changes were required {}'.format(vhost_cfg_file))
 
     if vhost_cfg_file.exists():
-        try:
-            check_dns(domain, public_ip, opts, message=debug)
-        except JhubNginxError as e:
-            warn('Virtual host config already exists but DNS check/update failed:\n {}'.format(str(e)))
+
+        if not skip_dns_check:
+            try:
+                check_dns(domain, public_ip, opts, message=debug)
+            except JhubNginxError as e:
+                warn('Virtual host config already exists but DNS check/update failed:\n {}'.format(str(e)))
 
         add_ssl_vhost()  # Make sure content is up to date
     else:
-        check_dns(domain, public_ip, opts, message=debug)
+        if not skip_dns_check:
+            check_dns(domain, public_ip, opts, message=debug)
+
         if have_ssl_files():
             debug('Found SSL files, no need to run certbot')
         else:
