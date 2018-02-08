@@ -109,7 +109,11 @@ def add_or_check_vhost(domain,
         updated = gen_config()
         if updated:
             debug('Updated vhost config {}'.format(vhost_cfg_file))
-            nginx_reload()
+            try:
+                nginx_reload()
+            except JhubNginxError as e:
+                attempt_cleanup()
+                raise e
         else:
             debug('No changes were required {}'.format(vhost_cfg_file))
 
