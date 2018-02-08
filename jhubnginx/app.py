@@ -1,4 +1,5 @@
 import click
+import sys
 
 from .utils import JhubNginxError
 from . import utils
@@ -24,8 +25,7 @@ def parse_config(ctx, param, value):
 
 
 @click.group()
-@click.option('--config', '-c', help='Supply config file',
-              callback=parse_config)
+@click.option('--config', '-c', help='Supply config file', callback=parse_config)
 def cli(config):
     pass
 
@@ -55,9 +55,9 @@ def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token):
                            opts=opts)
     except JhubNginxError as e:
         print(e)
-        return 1
+        sys.exit(1)
 
-    return 0
+    sys.exit(0)
 
 
 @cli.command('dns')
@@ -81,9 +81,9 @@ def dns(ctx, domain, update, token=None):
         if not result:
             message("DNS record doesn't match public ip")
 
-        return 0 if result else 1
+        sys.exit(0 if result else 1)
     except JhubNginxError as e:
         message(str(e))
-        return 1
+        sys.exit(1)
 
-    return 0
+    sys.exit(0)
