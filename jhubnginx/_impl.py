@@ -35,6 +35,7 @@ def add_or_check_vhost(domain,
     opts = utils.default_opts(opts)
     vhost_cfg_file = domain_config_path(domain, opts)
     public_ip = None if skip_dns_check else utils.public_ip()
+    email = _get(opts, 'letsencrypt.email', None)
 
     def nginx_reload():
         debug('Reloading nginx config')
@@ -48,10 +49,6 @@ def add_or_check_vhost(domain,
 
     def run_certbot():
         debug('Running certbot for {}'.format(domain))
-        email = _get(opts, 'letsencrypt.email', None)
-
-        if email is None:
-            raise JhubNginxError("Can't request SSL without an E-mail address")
 
         cmd = ('certbot certonly'
                ' --webroot -w {webroot}'
@@ -96,6 +93,9 @@ def add_or_check_vhost(domain,
         return privkey.exists() and fullchain.exists()
 
     def obtain_ssl():
+        if email is None:
+            raise JhubNginxError("Can't request SSL without an E-mail address")
+
         debug(' writing temp vhost config')
         gen_config(nossl=True)
         try:
