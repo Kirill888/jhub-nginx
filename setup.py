@@ -19,7 +19,7 @@ Automates exposing jupyterhub instances to the web in a safe manner.
     keywords=["jupyterhub", "jupyter", "nginx"],
     install_requires=[
         "jinja2",
-        "requests",
+        "requests >= 2.18.0",
         "pydash",
         "pyyaml",
         "click",
