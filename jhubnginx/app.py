@@ -37,8 +37,10 @@ def cli(config):
 @click.option('--skip-dns-check', default=False, is_flag=True, help="Don't check DNS record")
 @click.option('--email', type=str, help="Supply E-mail address for Let's Encrypt")
 @click.option('--token', type=str, help="Supply `duckdns.org` token for updating DNS entry")
+@click.option('--standalone', default=False, is_flag=True,
+              help="Obtain SSL certs using standalone mode of certbot (no nginx running)")
 @click.pass_obj
-def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token):
+def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, standalone):
     opts = ctx['opts']
 
     if email is not None:
@@ -52,6 +54,7 @@ def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token):
                            hub_ip=hub_ip,
                            hub_port=hub_port,
                            skip_dns_check=skip_dns_check,
+                           standalone=standalone,
                            opts=opts)
     except JhubNginxError as e:
         print(e)

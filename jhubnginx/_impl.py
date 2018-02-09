@@ -30,6 +30,7 @@ def add_or_check_vhost(domain,
                        hub_ip='127.0.0.1',
                        hub_port='8000',
                        skip_dns_check=False,
+                       standalone=False,
                        opts=None):
 
     opts = utils.default_opts(opts)
@@ -50,14 +51,24 @@ def add_or_check_vhost(domain,
     def run_certbot():
         debug('Running certbot for {}'.format(domain))
 
-        cmd = ('certbot certonly'
-               ' --webroot -w {webroot}'
-               ' --text --agree-tos --no-eff-email'
-               ' --email {email}'
-               ' --domains {domain}').format(
-                   email=_get(opts, 'letsencrypt.email'),
-                   webroot=_get(opts, 'letsencrypt.webroot'),
-                   domain=domain).split()
+        if standalone:
+            cmd = ('certbot certonly'
+                   ' --standalone'
+                   ' --text --agree-tos --no-eff-email'
+                   ' --email {email}'
+                   ' --domains {domain}').format(
+                       email=_get(opts, 'letsencrypt.email'),
+                       domain=domain).split()
+
+        else:
+            cmd = ('certbot certonly'
+                   ' --webroot -w {webroot}'
+                   ' --text --agree-tos --no-eff-email'
+                   ' --email {email}'
+                   ' --domains {domain}').format(
+                       email=_get(opts, 'letsencrypt.email'),
+                       webroot=_get(opts, 'letsencrypt.webroot'),
+                       domain=domain).split()
 
         try:
             out = subprocess.check_output(cmd).decode('utf-8')
@@ -95,6 +106,9 @@ def add_or_check_vhost(domain,
     def obtain_ssl():
         if email is None:
             raise JhubNginxError("Can't request SSL without an E-mail address")
+
+        if standalone:
+            return run_certbot()
 
         debug(' writing temp vhost config')
         gen_config(nossl=True)
