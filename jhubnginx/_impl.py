@@ -50,25 +50,29 @@ def add_or_check_vhost(domain,
 
     def run_certbot():
         debug('Running certbot for {}'.format(domain))
-
         if standalone:
             cmd = ('certbot certonly'
                    ' --standalone'
                    ' --text --agree-tos --no-eff-email'
                    ' --email {email}'
                    ' --domains {domain}').format(
-                       email=_get(opts, 'letsencrypt.email'),
-                       domain=domain).split()
-
+                    email=email,
+                    domain=domain).split()
         else:
+            webroot = Path(_get(opts, 'letsencrypt.webroot'))
+
+            if not webroot.exists():
+                debug('Creating webroot directory: {}'.format(webroot))
+                webroot.mkdir(parents=True)
+
             cmd = ('certbot certonly'
                    ' --webroot -w {webroot}'
                    ' --text --agree-tos --no-eff-email'
                    ' --email {email}'
                    ' --domains {domain}').format(
-                       email=_get(opts, 'letsencrypt.email'),
-                       webroot=_get(opts, 'letsencrypt.webroot'),
-                       domain=domain).split()
+                    email=email,
+                    webroot=webroot,
+                    domain=domain).split()
 
         try:
             out = subprocess.check_output(cmd).decode('utf-8')
