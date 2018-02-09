@@ -1,5 +1,4 @@
 import requests
-import subprocess
 import socket
 import yaml
 
@@ -17,18 +16,20 @@ def resolve_hostname(domain):
 
 
 def public_ip():
-    try:
-        return subprocess.check_output(['ec2metadata',
-                                        '--public-ipv4']).decode('ascii').rstrip()
-    except IOError:
-        pass
+    endpoints = [
+        ('http://instance-data/latest/meta-data/public-ipv4', None),  # AWS
+        ('http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip',
+         {"Metadata-Flavor": "Google"}),  # GCE
+        ('https://api.ipify.org', None),  # all other
+    ]
 
-    try:
-        with requests.get('https://api.ipify.org') as req:
-            if req:
-                return req.text
-    except IOError:
-        pass
+    for (url, hdrs) in endpoints:
+        try:
+            with requests.get(url, headers=hdrs, timeout=1) as req:
+                if req:
+                    return req.text
+        except IOError:
+            pass
 
     return None
 
