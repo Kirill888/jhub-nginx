@@ -3,7 +3,7 @@ nginx:
    check_cmd: 'nginx -t'
    reload_cmd: 'systemctl reload nginx'
 
-   sites: /etc/nginx/sites-enabled
+   sites: /etc/nginx/conf.d
    ssl_root: /etc/letsencrypt/live
 
    ssl_options: |

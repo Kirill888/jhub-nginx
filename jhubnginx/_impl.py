@@ -23,7 +23,7 @@ def render_vhost(domain, opts, **kwargs):
 
 
 def domain_config_path(domain, opts):
-    return Path(_get(opts, 'nginx.sites'))/domain
+    return Path(_get(opts, 'nginx.sites'))/(domain + '.conf')
 
 
 def add_or_check_vhost(domain,
@@ -87,6 +87,10 @@ def add_or_check_vhost(domain,
                            hub_port=hub_port,
                            hub_ip=hub_ip,
                            **kwargs)
+
+        if not vhost_cfg_file.parent.exists():
+            debug('Missing folder: {}, creating'.format(vhost_cfg_file.parent))
+            vhost_cfg_file.parent.mkdir(parents=True)
 
         return utils.write_if_different(str(vhost_cfg_file), txt)
 
