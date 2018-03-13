@@ -21,7 +21,7 @@ def parse_config(ctx, param, value):
         if opts is None:
             ctx.abort()
 
-    ctx.obj['opts'] = opts
+    ctx.obj['opts'] = utils.opts_update_from_env(opts)
 
 
 @click.group()

@@ -1,6 +1,9 @@
 import requests
 import socket
 import yaml
+import os
+from pydash import map_values_deep, defaults_deep
+from ._templates import DEFAULT_CFG
 
 
 class JhubNginxError(Exception):
@@ -57,15 +60,11 @@ def write_if_different(filename, content):
 
 
 def default_opts(opts=None):
-    from ._templates import DEFAULT_CFG
-    import yaml
-    import pydash
-
     default_opts = yaml.load(DEFAULT_CFG)
     if opts is None:
         return default_opts
 
-    return pydash.defaults_deep({}, opts, default_opts)
+    return defaults_deep({}, opts, default_opts)
 
 
 def opts_from_file(filename, ignore_missing=False):
@@ -82,3 +81,15 @@ def opts_from_file(filename, ignore_missing=False):
     except yaml.YAMLError as e:
         print(e)
         return None
+
+
+def resolve_env(v, prefix='env/'):
+    if isinstance(v, str) and v.startswith(prefix):
+        env_name = v[len(prefix):]
+        return os.environ.get(env_name)
+
+    return v
+
+
+def opts_update_from_env(opts):
+    return map_values_deep(opts, lambda x: resolve_env(x, prefix='env/'))
