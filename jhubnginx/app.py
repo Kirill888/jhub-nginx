@@ -41,6 +41,8 @@ def cli(config):
               help="Obtain SSL certs using standalone mode of certbot (no nginx running)")
 @click.pass_obj
 def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, standalone):
+    """ Create new or update existing proxy config
+    """
     opts = ctx['opts']
 
     if email is not None:
@@ -69,6 +71,8 @@ def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, standalone)
 @click.argument('domain', type=str)
 @click.pass_obj
 def dns(ctx, domain, update, token=None):
+    """ Check if DNS record is up to date
+    """
     from . import dns
 
     opts = ctx['opts']
