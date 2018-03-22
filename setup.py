@@ -10,7 +10,7 @@ Automates exposing jupyterhub instances to the web in a safe manner.
 
 1. Get free SSL certificate from letsencrypt
 2. Configure Nginx to forward https to jupyterhub running locally or behind a firewall or in container
-3. Optionally updates DNS if using free duckdns.org service
+3. Optionally updates DNS (for providers supported by apache-libcloud, also for duckdns.org)
     ''',
     author="Kirill Kouzoubov",
     author_email="Kirill888@gmail.com",
@@ -24,6 +24,10 @@ Automates exposing jupyterhub instances to the web in a safe manner.
         "pyyaml",
         "click",
     ],
+    extras_require=dict(
+        dns=['apache-libcloud'],
+        ec2=['apache-libcloud', 'boto3'],
+    ),
     entry_points={
         "console_scripts": [
             "jhub-vhost = jhubnginx.app:cli"

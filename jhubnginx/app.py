@@ -37,10 +37,12 @@ def cli(config):
 @click.option('--skip-dns-check', default=False, is_flag=True, help="Don't check DNS record")
 @click.option('--email', type=str, help="Supply E-mail address for Let's Encrypt")
 @click.option('--token', type=str, help="Supply `duckdns.org` token for updating DNS entry")
+@click.option('--route53', default=False, is_flag=True,
+              help="Use route53 DNS provider with credentials queried with boto3")
 @click.option('--standalone', default=False, is_flag=True,
               help="Obtain SSL certs using standalone mode of certbot (no nginx running)")
 @click.pass_obj
-def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, standalone):
+def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, route53, standalone):
     """ Create new or update existing proxy config
     """
     opts = ctx['opts']
@@ -49,7 +51,9 @@ def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, standalone)
         opts['letsencrypt']['email'] = email
 
     if token is not None:
-        opts['duckdns']['token'] = token
+        opts['dns']['token'] = token
+    elif route53 is not None:
+        opts['dns']['type'] = 'route53'
 
     try:
         add_or_check_vhost(domain,
@@ -67,17 +71,21 @@ def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, standalone)
 
 @cli.command('dns')
 @click.option('--update/--no-update', default=True, help="Whether to attempt DNS update")
+@click.option('--route53', default=False, is_flag=True,
+              help="Use route53 DNS provider with credentials queried with boto3")
 @click.option('--token', type=str, help="Supply `duckdns.org` token for updating DNS entry")
 @click.argument('domain', type=str)
 @click.pass_obj
-def dns(ctx, domain, update, token=None):
+def dns(ctx, domain, update, route53=None, token=None):
     """ Check if DNS record is up to date
     """
     from . import dns
 
     opts = ctx['opts']
     if token is not None:
-        opts['duckdns']['token'] = token
+        opts['dns']['token'] = token
+    elif route53 is not None:
+        opts['dns']['type'] = 'route53'
 
     try:
         result = dns.check_dns(domain,
