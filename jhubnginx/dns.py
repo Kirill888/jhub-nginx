@@ -116,7 +116,7 @@ def check_dns(domain,
               no_update=False):
     '''Check that domain resolves to public ip of this host.
 
-       If it doesn't and it is a duckdns domain and duckdns token is configured then update DNS record.
+       If it doesn't and DNS update settings are configured then update DNS record.
 
        throws JhubNginxError if
        - DNS doesn't match public ip and can not be updated
