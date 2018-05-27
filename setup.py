@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="jhub-nginx-vhost",
+    name="jhub-nginx",
     packages=find_packages(),
     version="0.1",
     description="Manage virtual hosts entries for proxying from nginx to JupyterHub",
