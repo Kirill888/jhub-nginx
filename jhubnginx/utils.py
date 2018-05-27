@@ -84,6 +84,11 @@ def slurp(filename):
         return None
 
 
+def check_first_line(fname, header):
+    with open(fname, 'rt') as f:
+        return f.readline().rstrip() == header
+
+
 def file_needs_update(filename, content):
     return slurp(filename) != content
 

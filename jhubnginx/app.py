@@ -3,7 +3,7 @@ import sys
 
 from .utils import JhubNginxError
 from . import utils
-from ._impl import add_or_check_vhost
+from ._impl import add_or_check_vhost, remove_vhost
 
 
 def message(msg):
@@ -62,6 +62,26 @@ def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, route53, st
                            skip_dns_check=skip_dns_check,
                            standalone=standalone,
                            opts=opts)
+    except JhubNginxError as e:
+        print(e)
+        sys.exit(1)
+
+    sys.exit(0)
+
+
+@cli.command('remove')
+@click.option('--keep-certificates', default=False, is_flag=True,
+              help="Don't revoke certificates")
+@click.argument('domain', type=str)
+@click.pass_obj
+def remove(ctx, domain, keep_certificates):
+    """ Revoke SSL certificates and remove vhost entry from nginx.
+
+    """
+    opts = ctx['opts']
+
+    try:
+        remove_vhost(domain, opts, keep_certificates=keep_certificates)
     except JhubNginxError as e:
         print(e)
         sys.exit(1)
