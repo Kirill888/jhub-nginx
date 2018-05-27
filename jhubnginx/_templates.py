@@ -50,7 +50,7 @@ server {
     ssl_certificate         {{nginx['ssl_root']}}/{{domain}}/fullchain.pem;
     ssl_trusted_certificate {{nginx['ssl_root']}}/{{domain}}/fullchain.pem;
 
-    {{nginx['ssl_options']}}
+{{indent(nginx['ssl_options'], 4)}}
 
     # Managing literal requests to the JupyterHub front end
     location / {

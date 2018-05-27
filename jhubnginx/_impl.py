@@ -19,8 +19,13 @@ def debug(msg):
     print(msg)
 
 
+def indent(s, n):
+    pad = ' '*n
+    return '\n'.join(pad + l for l in s.splitlines())
+
+
 def render_vhost(domain, opts, **kwargs):
-    return Template(NGINX_VHOST).render(domain=domain, **kwargs, **opts)
+    return Template(NGINX_VHOST).render(domain=domain, indent=indent, **kwargs, **opts)
 
 
 def domain_config_path(domain, opts):
