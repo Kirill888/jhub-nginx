@@ -52,7 +52,7 @@ def add(ctx, domain, hub_ip, hub_port, skip_dns_check, email, token, route53, st
 
     if token is not None:
         opts['dns']['token'] = token
-    elif route53 is not None:
+    elif route53:
         opts['dns']['type'] = 'route53'
 
     try:
@@ -84,7 +84,7 @@ def dns(ctx, domain, update, route53=None, token=None):
     opts = ctx['opts']
     if token is not None:
         opts['dns']['token'] = token
-    elif route53 is not None:
+    elif route53:
         opts['dns']['type'] = 'route53'
 
     try:
