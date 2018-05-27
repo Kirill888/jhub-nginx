@@ -1,11 +1,12 @@
 import os
 import subprocess
+import time
 from pathlib import Path
 from jinja2 import Template
 from pydash import get as _get
 
 from . import utils
-from .utils import JhubNginxError
+from .utils import JhubNginxError, dns_wait
 from ._templates import NGINX_VHOST
 from .dns import check_dns
 
@@ -31,6 +32,8 @@ def add_or_check_vhost(domain,
                        hub_port='8000',
                        skip_dns_check=False,
                        standalone=False,
+                       dns_wait_timeout=5*60,
+                       min_dns_wait=60,
                        opts=None):
 
     opts = utils.default_opts(opts)
@@ -48,7 +51,7 @@ def add_or_check_vhost(domain,
         except subprocess.CalledProcessError as e:
             raise JhubNginxError('Failed to reload nginx config: {}'.format(str(e)))
 
-    def run_certbot():
+    def run_certbot(num_tries):
         debug('Running certbot for {}'.format(domain))
         if standalone:
             cmd = ('certbot certonly'
@@ -74,13 +77,21 @@ def add_or_check_vhost(domain,
                     webroot=webroot,
                     domain=domain).split()
 
-        try:
-            out = subprocess.check_output(cmd).decode('utf-8')
-            debug(out)
-        except FileNotFoundError as e:
-            raise JhubNginxError('certbot is not installed')
-        except subprocess.CalledProcessError as e:
-            raise JhubNginxError('certbot reported an error')
+        while num_tries > 0:
+            num_tries -= 1
+            try:
+                out = subprocess.check_output(cmd).decode('utf-8')
+                debug(out)
+                return True
+            except FileNotFoundError as e:
+                raise JhubNginxError('certbot is not installed')
+            except subprocess.CalledProcessError as e:
+                if num_tries > 0:
+                    debug('Will re-try in one minute')
+                    time.sleep(60)
+
+        raise JhubNginxError('certbot reported an error')
+        return False
 
     def gen_config(**kwargs):
         txt = render_vhost(domain, opts,
@@ -116,13 +127,13 @@ def add_or_check_vhost(domain,
             raise JhubNginxError("Can't request SSL without an E-mail address")
 
         if standalone:
-            return run_certbot()
+            return run_certbot(2)
 
         debug(' writing temp vhost config')
         gen_config(nossl=True)
         try:
             nginx_reload()
-            run_certbot()
+            run_certbot(2)
         except JhubNginxError as e:
             attempt_cleanup()
             raise e
@@ -143,6 +154,14 @@ def add_or_check_vhost(domain,
         else:
             debug('No changes were required {}'.format(vhost_cfg_file))
 
+    def on_dns_update(domain, ip):
+        if min_dns_wait:
+            debug('Waiting for {} seconds after updating DNS'.format(min_dns_wait))
+            time.sleep(min_dns_wait)
+
+        if dns_wait(domain, ip, dns_wait_timeout) is False:
+            raise JhubNginxError('Requested DNS record update, but failed to observe the change')
+
     if vhost_cfg_file.exists():
 
         if not skip_dns_check:
@@ -154,7 +173,7 @@ def add_or_check_vhost(domain,
         add_ssl_vhost()  # Make sure content is up to date
     else:
         if not skip_dns_check:
-            check_dns(domain, public_ip, opts, message=debug)
+            check_dns(domain, public_ip, opts, on_update=on_dns_update, message=debug)
 
         if have_ssl_files():
             debug('Found SSL files, no need to run certbot')

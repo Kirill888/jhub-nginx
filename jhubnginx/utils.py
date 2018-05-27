@@ -2,6 +2,7 @@ import requests
 import socket
 import yaml
 import os
+import time
 from pydash import map_values_deep, defaults_deep
 from ._templates import DEFAULT_CFG
 
@@ -16,6 +17,17 @@ def resolve_hostname(domain):
         return socket.gethostbyname(domain)
     except IOError:
         return None
+
+
+def dns_wait(domain, ip, timeout):
+    t0 = time.time()
+
+    while resolve_hostname(domain) != ip:
+        if time.time() - t0 > timeout:
+            return False
+        time.sleep(0.5)
+
+    return True
 
 
 def public_ip():

@@ -113,6 +113,7 @@ def check_dns(domain,
               public_ip=None,
               opts=None,
               message=lambda x: None,
+              on_update=None,
               no_update=False):
     '''Check that domain resolves to public ip of this host.
 
@@ -153,6 +154,8 @@ def check_dns(domain,
 
     if update_dns(domain, public_ip, opts):
         message('Updated DNS record successfully')
+        if on_update:
+            on_update(domain, public_ip)
         return True
 
     if domain_ip is None:
