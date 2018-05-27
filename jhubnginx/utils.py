@@ -3,6 +3,9 @@ import socket
 import yaml
 import os
 import time
+import subprocess
+import shlex
+import shutil
 from pydash import map_values_deep, defaults_deep
 from ._templates import DEFAULT_CFG
 
@@ -12,19 +15,43 @@ class JhubNginxError(Exception):
         Exception.__init__(self, *args)
 
 
-def resolve_hostname(domain):
+def resolve_with_dig(domain, dns_server='8.8.8.8'):
+    try:
+        ip = subprocess.check_output(['dig',
+                                      shlex.quote('@'+dns_server),
+                                      '+short',
+                                      'A',
+                                      shlex.quote(domain)]).decode('utf-8').rstrip()
+    except FileNotFoundError:
+        return None
+    except subprocess.CalledProcessError:
+        return None
+
+    if len(ip) == 0:
+        ip = None
+
+    return ip
+
+
+def resolve_hostname(domain, use_dig=False):
+    if use_dig and shutil.which('dig') is not None:
+        return resolve_with_dig(domain)
+
     try:
         return socket.gethostbyname(domain)
     except IOError:
         return None
 
 
-def dns_wait(domain, ip, timeout):
+def dns_wait(domain, ip, timeout, cbk=None, use_dig=True):
     t0 = time.time()
 
-    while resolve_hostname(domain) != ip:
-        if time.time() - t0 > timeout:
+    while resolve_hostname(domain, use_dig=use_dig) != ip:
+        dt = time.time() - t0
+        if dt > timeout:
             return False
+        if cbk:
+            cbk(dt)
         time.sleep(0.5)
 
     return True

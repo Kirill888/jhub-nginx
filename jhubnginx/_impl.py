@@ -164,11 +164,13 @@ def add_or_check_vhost(domain,
             debug('Waiting for {} seconds after updating DNS'.format(min_dns_wait))
             time.sleep(min_dns_wait)
 
-        if dns_wait(domain, ip, dns_wait_timeout) is False:
-            raise JhubNginxError('Requested DNS record update, but failed to observe the change')
+        def cbk(t):
+            debug("Still waiting for DNS to update")
+
+        if dns_wait(domain, ip, dns_wait_timeout, cbk=cbk, use_dig=True) is False:
+            warn('Requested DNS record update, but failed to observe the change, will continue anyway')
 
     if vhost_cfg_file.exists():
-
         if not skip_dns_check:
             try:
                 check_dns(domain, public_ip, opts, message=debug)
