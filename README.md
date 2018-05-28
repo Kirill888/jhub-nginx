@@ -39,13 +39,13 @@ sudo -H pip3 install --upgrade pip
 Install this app
 
 ```
-sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx.git#egg=jhub-nginx[dns]
+sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx.git@v0.1#egg=jhub-nginx[dns]
 ```
 
 Or if running on AWS and want to use IAM roles, install with `ec2` option, this will pull in `boto3` dependency.
 
 ```
-sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx.git#egg=jhub-nginx[ec2]
+sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx.git@v0.1#egg=jhub-nginx[ec2]
 ```
 
 Check that everything worked:
@@ -78,6 +78,9 @@ from `boto3` library.
 Rather than storing sensitive information in the configuration file you can
 instead reference it via environment variables, any value of the form
 `env/VARNAME` will be replaced with the value of `VARNAME` environment variable.
+It is however up to you to populate those in a secure fashion, most cloud
+provider have some kind of Key Management Service and their own tools to access
+it.
 
 Example minimal configuration when using [Cloudflare](https://www.cloudflare.com) 
 DNS servers (free for personal use)
