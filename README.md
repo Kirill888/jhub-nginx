@@ -8,7 +8,7 @@ Library and a command line tool for generating virtual hosts configuration files
 
 ## Dependencies
 
-1. Nginx (needs to be installed an running)
+1. Nginx (needs to be installed and running)
 2. Certbot
 
 
@@ -32,7 +32,7 @@ sudo apt-get install -y certbot
 Install nginx and upgrade pip
 
 ```
-sudo apt-get install -y nginx python3-pip
+sudo apt-get install -y nginx git python3-pip
 sudo -H pip3 install --upgrade pip
 ```
 
