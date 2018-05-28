@@ -39,13 +39,13 @@ sudo -H pip3 install --upgrade pip
 Install this app
 
 ```
-sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx-vhost.git#egg=jhub-nginx[dns]
+sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx.git#egg=jhub-nginx[dns]
 ```
 
 Or if running on AWS and want to use IAM roles, install with `ec2` option, this will pull in `boto3` dependency.
 
 ```
-sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx-vhost.git#egg=jhub-nginx[ec2]
+sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx.git#egg=jhub-nginx[ec2]
 ```
 
 Check that everything worked:
