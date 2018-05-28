@@ -14,7 +14,7 @@ Automates exposing jupyterhub instances to the web in a safe manner.
     ''',
     author="Kirill Kouzoubov",
     author_email="Kirill888@gmail.com",
-    url="https://github.com/Kirill888/jhub-nginx-vhost",
+    url="https://github.com/Kirill888/jhub-nginx",
     license="MIT",
     keywords=["jupyterhub", "jupyter", "nginx"],
     install_requires=[
