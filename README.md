@@ -48,8 +48,74 @@ Or if running on AWS and want to use IAM roles, install with `ec2` option, this 
 sudo -H pip3 install git+https://github.com/Kirill888/jhub-nginx-vhost.git#egg=jhub-nginx[ec2]
 ```
 
+Check that everything worked:
+
+```
+jhub-vhost --help
+```
+
+If you manage DNS records externally then you can skip configuration and just run:
+
+```
+sudo jhub-vhost add --email user@example.com jupyter.example.com
+```
+
+This will:
+
+1. Create temporary configuration for Nginx compatible with `certbot`
+2. Obtain SSL certificate from Let's Encrypt using `certbot`
+3. Create final configuration for Nginx that will proxy outside traffic to default jupyterhub configuration `http://127.0.0.1:8000`
+
 ## Configuration
 
+Configuration is done via YAML file. At the absolute minimum you need to supply
+an email address to give to Let's Encrypt. If you want `jhub-vhost` to manage
+DNS records for you, DNS credentials will also need to be supplied. If
+running in AWS and using Route53, then the recommended way is to set up IAM role
+with proper permissions, `jhub-vhost` will then automatically use credentials
+from `boto3` library.
+
+Rather than storing sensitive information in the configuration file you can
+instead reference it via environment variables, any value of the form
+`env/VARNAME` will be replaced with the value of `VARNAME` environment variable.
+
+Example minimal configuration when using [Cloudflare](https://www.cloudflare.com) 
+DNS servers (free for personal use)
+
+Create file `cfg.yml`
+
+```yaml
+letsencrypt:
+   email: env/EMAIL
+dns:
+   type: cloudflare
+   key: env/EMAIL
+   secret: env/CLOUDFLARE_TOKEN
+```
+
+Setup environment and run `jhub-vhost`
+
+```bash
+export EMAIL=user@example.com
+export CLOUDFLARE_TOKEN=96809e84055d7ed8575173103308639df1724d
+
+jhub-vhost -c cfg.yml add jupyter.example.com
+```
+
+To just update DNS following command can be used
+
+```bash
+jhub-vhost -c cfg.yml dns --update jupyter.example.com
+```
+
+When you are done, you can revoke SSL certificate and remove Nginx configuration
+with the following command:
+
+```bash
+jhub-vhost remove jupyter.example.com
+```
+
+### Default Configuration
 
 ```yaml
 
@@ -74,15 +140,7 @@ nginx:
      add_header X-Frame-Options DENY;
      add_header X-Content-Type-Options nosniff;
 
-# letsencrypt.webroot -- where to put temp files
-# letsencrypt.email   -- email to use
+# location used by certbot to write temporary files to, to prove domain name ownership
 letsencrypt:
    webroot: /var/www/letsencrypt
-   email: env/EMAIL
-
-# Example DNS using cloudflare
-dns:
-   type: cloudflare
-   key: env/EMAIL
-   secret: env/CLOUDFLARE_TOKEN
 ```
